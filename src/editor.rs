@@ -34,7 +34,8 @@ pub struct Editor {
     pub(crate) code: Code,
     /// Current cursor position as a character index in the document
     pub(crate) cursor: usize,
-
+///Anchor when we placed that editor in the layout on the y_axis
+    pub (crate) starting_offset_y: usize,
     /// Vertical scroll offset: index of the first visible line
     pub(crate) offset_y: usize,
 
@@ -64,11 +65,12 @@ pub struct Editor {
 }
 
 impl Editor {
-    pub fn new(lang: &str, text: &str, theme: Vec<(&str, &str)>) -> Result<Self> {
-        Self::new_with_highlights(lang, text, theme, None)
+    pub fn new(y_offset:usize,lang: &str, text: &str, theme: Vec<(&str, &str)>) -> Result<Self> {
+        Self::new_with_highlights(y_offset,lang, text, theme, None)
     }
 
     pub fn new_with_highlights(
+        y_offset:usize,
         lang: &str,
         text: &str,
         theme: Vec<(&str, &str)>,
@@ -85,6 +87,7 @@ impl Editor {
             breakpoints:breakpoints,
             code,
             cursor: 0,
+            starting_offset_y: y_offset,
             offset_y: 0,
             offset_x: 0,
             theme,
@@ -171,6 +174,18 @@ impl Editor {
                 if let Some(cursor) = pos {
                     self.handle_mouse_down(cursor);
                 }
+                else
+                {
+                    if let Some(line_no) = self.breakpoint_from_mouse(mouse.column, mouse.row, area)
+                    {
+                        if self.breakpoints.contains(&line_no) {
+                            self.breakpoints.remove(&line_no);
+                        }
+                        else {
+                            self.breakpoints.insert(line_no);
+                        }
+                    }
+                }
             }
             MouseEventKind::Drag(MouseButton::Left) => {
                 // Auto-scroll when dragging on the last or first visible row
@@ -247,7 +262,29 @@ impl Editor {
             }
         }
     }
+    fn breakpoint_from_mouse(
+        &self, mouse_x: u16, mouse_y: u16, area: &Rect
+    ) -> Option<usize> {
+        let total_lines = self.code.len_lines();
+        let max_line_number = total_lines.max(1);
+        let line_number_digits = max_line_number.to_string().len().max(5);
+        let line_number_width = (line_number_digits + 2) as u16;
 
+        if mouse_y < area.top()
+            || mouse_y >= area.bottom()
+        {
+            return None;
+        }
+        if mouse_x < area.left() + line_number_width
+        {
+            /*eprintln!("self.offset_y:{}",self.offset_y);
+            eprintln!("self.starting_offset_y:{}",self.starting_offset_y);
+            eprintln!("would set breakpoint:{}",((self.offset_y + mouse_y as usize) - self.starting_offset_y) );*/
+           return Some((self.offset_y + mouse_y as usize) - self.starting_offset_y);
+        }
+
+        None
+    }
     fn cursor_from_mouse(
         &self, mouse_x: u16, mouse_y: u16, area: &Rect
     ) -> Option<usize> {
