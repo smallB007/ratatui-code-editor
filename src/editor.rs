@@ -65,10 +65,12 @@ pub struct Editor {
 }
 
 impl Editor {
-    pub fn new(y_offset:usize,lang: &str, text: &str, theme: Vec<(&str, &str)>) -> Result<Self> {
+    pub fn new(lang: &str, text: &str, theme: Vec<(&str, &str)>) -> Result<Self> {
+        Self::new_with_highlights(0,lang, text, theme, None)
+    }
+    pub fn new_with_y_offset(y_offset:usize,lang: &str, text: &str, theme: Vec<(&str, &str)>) -> Result<Self> {
         Self::new_with_highlights(y_offset,lang, text, theme, None)
     }
-
     pub fn new_with_highlights(
         y_offset:usize,
         lang: &str,
