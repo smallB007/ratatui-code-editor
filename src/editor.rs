@@ -13,7 +13,7 @@ use crate::code::{RopeGraphemes, grapheme_width_and_chars_len, grapheme_width};
 use crate::selection::{Selection, SelectionSnap};
 use crate::actions::*;
 use crate::utils;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use anyhow::{Result, anyhow};
@@ -28,6 +28,8 @@ type HightlightCache = HashMap<(usize, usize), Vec<Hightlight>>;
 /// Represents the text editor, which holds the code buffer, cursor, selection,
 /// theme, scroll offsets, highlight cache, clipboard, and user mark intervals.
 pub struct Editor {
+    ///breakpoints
+    pub(crate) breakpoints:HashSet<usize>,
     /// Code buffer and editing/highlighting logic for the current language
     pub(crate) code: Code,
     /// Current cursor position as a character index in the document
@@ -77,8 +79,10 @@ impl Editor {
 
         let theme = Self::build_theme(&theme);
         let highlights_cache = RefCell::new(HashMap::new());
+        let mut breakpoints =HashSet::new();/*artie, in the future, read saved bpts*/
 
         Ok(Self {
+            breakpoints:breakpoints,
             code,
             cursor: 0,
             offset_y: 0,

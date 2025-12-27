@@ -21,7 +21,7 @@ use crate::code::{
 impl WidgetRef for &Editor {
     fn render_ref(&self, area: Rect, buf: &mut Buffer) {
 
-    
+
         let code = self.code_ref();
         let total_lines = code.len_lines();
         let total_chars = code.len_chars();
@@ -37,8 +37,13 @@ impl WidgetRef for &Editor {
         // draw line numbers and text
         for line_idx in self.offset_y..total_lines {
             if draw_y >= area.bottom() { break }
-        
-            let line_number = format!("{:^width$}", line_idx + 1, width = line_number_digits);
+            let line_number = if self.breakpoints.contains(&line_idx) {
+                format!("{:^width$}", "⭕", width = line_number_digits)
+            }
+            else {
+
+                format!("{:^width$}", line_idx + 1, width = line_number_digits)
+            };
             buf.set_string(area.left(), draw_y, &line_number, line_number_style);
         
             let line_len = code.line_len(line_idx);
