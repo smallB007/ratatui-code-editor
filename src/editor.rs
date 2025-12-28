@@ -169,8 +169,19 @@ impl Editor {
     ) -> Result<()> {
 
         match mouse.kind {
-            MouseEventKind::ScrollUp => self.scroll_up(),
-            MouseEventKind::ScrollDown => self.scroll_down(area.height as usize),
+            MouseEventKind::ScrollUp => {
+                let pos = self.cursor_from_mouse(mouse.column, mouse.row, area);
+                if let Some(cursor) = pos {
+                    self.scroll_up();
+                }
+                },
+            MouseEventKind::ScrollDown => {
+                let pos = self.cursor_from_mouse(mouse.column, mouse.row, area);
+                if let Some(cursor) = pos {
+                    self.scroll_down(area.height as usize)
+                }
+
+            }
             MouseEventKind::Down(MouseButton::Left) => {
                 let pos = self.cursor_from_mouse(mouse.column, mouse.row, area);
                 if let Some(cursor) = pos {
