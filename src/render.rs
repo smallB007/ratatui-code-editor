@@ -38,11 +38,11 @@ impl WidgetRef for &Editor {
         for line_idx in self.offset_y..total_lines {
             if draw_y >= area.bottom() { break }
             let line_number = if self.breakpoints.contains(&line_idx) {
-                format!("{:^width$}", "⭕", width = line_number_digits)
+                format!("{:>width$}", "\u{1F534}", width = line_number_digits - 1)
             }
             else {
-
-                format!("{:^width$}", line_idx + 1, width = line_number_digits)
+                format!("{:>width$}", line_idx + 1, width = line_number_digits)
+                //format!("{:^width$}", line_idx + 1, width = line_number_digits)
             };
             buf.set_string(area.left(), draw_y, &line_number, line_number_style);
         
