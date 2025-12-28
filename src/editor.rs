@@ -170,13 +170,13 @@ impl Editor {
 
         match mouse.kind {
             MouseEventKind::ScrollUp => {
-                let pos = self.cursor_from_mouse(mouse.column, mouse.row, area);
+                let pos = self.cursor_from_mouse_editor_plus_gutter(mouse.column, mouse.row, area);
                 if let Some(cursor) = pos {
                     self.scroll_up();
                 }
                 },
             MouseEventKind::ScrollDown => {
-                let pos = self.cursor_from_mouse(mouse.column, mouse.row, area);
+                let pos = self.cursor_from_mouse_editor_plus_gutter(mouse.column, mouse.row, area);
                 if let Some(cursor) = pos {
                     self.scroll_down(area.height as usize)
                 }
@@ -297,6 +297,59 @@ impl Editor {
         }
 
         None
+    }
+    fn cursor_from_mouse_editor_plus_gutter(
+        &self, mouse_x: u16, mouse_y: u16, area: &Rect
+    ) -> Option<usize> {
+        let total_lines = self.code.len_lines();
+        let max_line_number = total_lines.max(1);
+        let line_number_digits = max_line_number.to_string().len().max(5);
+        let line_number_width = (line_number_digits + 2) as u16;
+
+        if mouse_y < area.top()
+            || mouse_y >= area.bottom()
+        {
+            return None;
+        }
+//todo! shared code with cursor_from_mouse but there are some subtle differences
+        let clicked_row = (mouse_y - area.top()) as usize + self.offset_y;
+        if clicked_row >= self.code.len_lines() {
+            return None;
+        }
+
+        let clicked_col = (mouse_x - area.left() /*- line_number_width*/) as usize;
+
+        let line_start_char = self.code.line_to_char(clicked_row);
+        let line_len = self.code.line_len(clicked_row);
+
+        let start_col = self.offset_x.min(line_len);
+        let end_col = line_len;
+
+        let char_start = line_start_char + start_col;
+        let char_end = line_start_char + end_col;
+
+        let mut current_col = 0;
+        let mut char_idx = start_col;
+        let visible_chars = self.code.char_slice(char_start, char_end);
+        for g in RopeGraphemes::new(&visible_chars) {
+            let (g_width, g_chars) = grapheme_width_and_chars_len(g);
+            if current_col + g_width > clicked_col { break; }
+            current_col += g_width;
+            char_idx += g_chars;
+        }
+
+        let line = self.code.char_slice(line_start_char, line_start_char + line_len);
+        let visual_width: usize = RopeGraphemes::new(&line).map(grapheme_width).sum();
+
+        if clicked_col + self.offset_x >= visual_width {
+            let mut end_idx = line.len_chars();
+            if end_idx > 0 && line.char(end_idx - 1) == '\n' {
+                end_idx -= 1;
+            }
+            char_idx = end_idx;
+        }
+
+        Some(line_start_char + char_idx)
     }
     fn cursor_from_mouse(
         &self, mouse_x: u16, mouse_y: u16, area: &Rect
