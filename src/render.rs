@@ -18,10 +18,8 @@ use crate::code::{
 /// * `area` - The rectangular area on the terminal to draw within.
 /// * `buf` - The ratatui `Buffer` that represents the screen cells to draw to.
 /// 
-impl WidgetRef for &Editor {
-    fn render_ref(&self, area: Rect, buf: &mut Buffer) {
-
-
+impl Widget for &Editor {
+    fn render(self, area: Rect, buf: &mut Buffer) {
         let code = self.code_ref();
         let total_lines = code.len_lines();
         let total_chars = code.len_chars();
