@@ -99,8 +99,8 @@ fn main() -> anyhow::Result<()> {
                     match active_editor {
                         0 => editor1.mouse(mouse, &editor1_area)?,
                         1 => editor2.mouse(mouse, &editor2_area)?,
-                        _ => {}
-                    }
+                        _ => false
+                    };
                 },
 
                 Event::Resize(_, _) => {}

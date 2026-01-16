@@ -166,8 +166,8 @@ impl Editor {
 
     pub fn mouse(
         &mut self, mouse: MouseEvent, area: &Rect,
-    ) -> Result<()> {
-
+    ) -> Result<bool> {
+        let mut needs_redraw = false;
         match mouse.kind {
             MouseEventKind::ScrollUp => {
                 let pos = self.cursor_from_mouse_editor_plus_gutter(mouse.column, mouse.row, area);
@@ -216,9 +216,9 @@ impl Editor {
             MouseEventKind::Up(MouseButton::Left) => {
                 self.selection_snap = SelectionSnap::None;
             }
-            _ => {}
+            _ => {needs_redraw = true;}
         }
-        Ok(())
+        Ok(needs_redraw)
     }
 
     fn handle_mouse_down(&mut self, cursor: usize) {
